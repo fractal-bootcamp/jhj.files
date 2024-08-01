@@ -18,14 +18,27 @@ datasource db {
 // user
 model User {
   // metadata
-  id                  String                @id @default(cuid())
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @default(now()) @updatedAt
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   // fields
-  email               String                @unique
-  name                String?
-  clerkId             String                @unique
-
+  email     String   @unique
+  name      String?
+  clerkId   String   @unique
+  files     File[]
 
   @@map("user")
+}
+
+model File {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  filename  String
+  s3Key     String
+  s3Url     String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("file")
 }
