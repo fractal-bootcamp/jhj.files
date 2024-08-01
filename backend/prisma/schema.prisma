@@ -35,8 +35,10 @@ model File {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   filename  String
-  s3Key     String
+  key       String
   s3Url     String
+  mimetype  String // Added this line
+  size      Int // Added this line
   userId    String
   user      User     @relation(fields: [userId], references: [id])
 
