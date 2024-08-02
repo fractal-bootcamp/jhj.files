@@ -2,7 +2,7 @@ import { useUser, useClerk } from "@clerk/clerk-react";
 import axios from "axios";
 import { UserOutputDto, UserInputDto } from "./types";
 
-const API_URL = process.env.API_URL;
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const useUserService = () => {
   const { user } = useUser();
