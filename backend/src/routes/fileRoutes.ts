@@ -25,10 +25,30 @@ const upload = multer({
 });
 
 
-export async function uploadFile(req: Request, res: Response) {
-    //upload metadata through prisma client after upload function completes and provide response
-}
+// POST ROUTE FOR PHOTOS
+router.post('/photo', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
 
+        // additional logic to save metadata to your database using Prisma client
+        // For example:
+        // const fileMetadata = await client.file.create({
+        //     data: {
+        //         filename: req.file.originalname,
+        //         s3Key: req.file.key,
+        //         mimetype: req.file.mimetype,
+        //         size: req.file.size
+        //     }
+        // });
+
+        res.status(200).json({ message: 'Photo uploaded successfully', file: req.file });
+    } catch (error) {
+        console.error('Error uploading photo:', error);
+        res.status(500).json({ error: 'Failed to upload photo' });
+    }
+});
 
 //simple get route to test my s3 bucket
 router.get('/test', async (req, res) => {

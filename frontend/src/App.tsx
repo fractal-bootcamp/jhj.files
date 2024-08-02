@@ -20,7 +20,7 @@ export default function App() {
     formData.append("file", file);
 
     try {
-      const response = await axios.post("http:localhost:3009/api/files/test", formData, {
+      const response = await axios.post("http://localhost:3009/api/files/photo", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
