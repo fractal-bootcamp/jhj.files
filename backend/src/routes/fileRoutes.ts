@@ -4,6 +4,7 @@ import multerS3 from "multer-s3"
 import { s3 } from '../services/s3Service';
 import client from '../utils/client'
 import { ClerkExpressWithAuth } from '@clerk/clerk-sdk-node';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
 
 console.log("File routes module loaded");
 
@@ -15,7 +16,6 @@ router.use((req, res, next) => {
     console.log(`Incoming request: ${req.method} ${req.path}`);
     next();
 });
-
 
 
 // Add error handling to multer-s3 configuration
@@ -54,6 +54,10 @@ const handleUpload = (req, res, next) => {
         next();
     });
 };
+
+router.get("/", (req, res) => {
+    res.status(200).json({ message: "Hello world" });
+});
 
 // POST ROUTE FOR PHOTOS
 router.post('/photo', handleUpload, async (req, res, next) => {
@@ -103,7 +107,7 @@ router.post('/photo', handleUpload, async (req, res, next) => {
     }
 });
 
-//simple get route to test my s3 bucket
+//GET ROUTE TO TEST S3 BUCKET
 router.get('/test', async (req, res, next) => {
     try {
         const params = {
@@ -120,11 +124,83 @@ router.get('/test', async (req, res, next) => {
     }
 });
 
-router.get("/", (req, res) => {
-    res.status(200).json({ message: "Hello world" });
+//GET ALL ROUTE TO RETRIEVE USER FILE NAMES/KEYS
+
+router.get("/get-all", async (req, res) => {
+    try {
+        if (!req.auth || !req.auth.userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const user = await client.user.findUnique({
+            where: { clerkId: req.auth.userId }
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const files = await client.file.findMany({
+            where: { userId: user.id },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        res.json(files);
+    } catch (error) {
+        console.error('Error fetching files:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
+// GET S3 FILES
 
-//router.post('/upload', upload.single('file'), uploadFile);
+router.get('/:s3Key', async (req, res) => {
+    try {
+        const user = await client.user.findUnique({
+            where: { clerkId: req.auth.userId }
+        });
+        if (!user) {
+            return res.status(404).json({ error: 'user not found' })
+        }
+
+        const fileMetadata = await client.file.findFirst({
+            where: {
+                userId: user.id,
+                s3Key: req.params.s3Key
+            }
+        });
+
+        if (!fileMetadata) {
+            return res.status(404).json({ error: 'file not found' })
+        }
+
+        const getObjectParams = {
+            Bucket: 'jhj-fractal',
+            Key: req.params.s3Key
+        };
+
+        const command = new GetObjectCommand(getObjectParams);
+        const s3Object = await s3.send(command);
+
+        if (!s3Object) {
+            return res.status(404).json({ error: 's3 file content not found' })
+        }
+
+        res.setHeader('Content-Type', s3Object.ContentType || ' application/octet-stream');
+        res.setHeader('Content-Length', s3Object.ContentLength?.toString() || '');
+        res.setHeader('Content-Disposition', `inline; filename="${fileMetadata.filename}"`);
+
+        const readableStream = s3Object.Body as NodeJS.ReadableStream;
+        if (readableStream) {
+            readableStream.pipe(res);
+        } else {
+            res.status(500).json({ error: 'Unable to read file stream' });
+        }
+    } catch (error) {
+        console.error('Error fetching file from S3:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+})
+
 
 export default router;

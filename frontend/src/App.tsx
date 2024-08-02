@@ -2,6 +2,7 @@ import { SignedIn, SignedOut, SignInButton, useAuth, UserButton, useSignIn, useS
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Clerk } from '@clerk/clerk-js'
+import Viewer from "./components/view-uploads";
 
 const clerk = new Clerk('pk_test_bWFueS1jb25kb3ItNjEuY2xlcmsuYWNjb3VudHMuZGV2JA');
 await clerk.load();
@@ -128,6 +129,7 @@ export default function App() {
               </div>
             </form>
           </div>
+          <Viewer />
         </div>
         <UserButton />
       </SignedIn>
