@@ -127,6 +127,7 @@ router.get('/test', async (req, res, next) => {
 //GET ALL ROUTE TO RETRIEVE USER FILE NAMES/KEYS
 
 router.get("/get-all", async (req, res) => {
+    console.log("GET /get-all route accessed");
     try {
         if (!req.auth || !req.auth.userId) {
             return res.status(401).json({ error: 'Unauthorized' });
