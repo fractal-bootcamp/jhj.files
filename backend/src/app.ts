@@ -17,6 +17,11 @@ app.use(
 
 app.use(express.json());
 
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+	console.error('Error details:', err);
+	res.status(500).json({ error: 'Internal Server Error', details: err.message });
+});
+
 
 // User Routes
 app.use("/api", userRouter);
